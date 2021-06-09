@@ -86,9 +86,5 @@ module.exports = async (msg) => {
 
     //React to the message to let the user know it was processed.
     msg.obj.react('✅')
-        .then(() => msg.obj.react('🇸'))
-        .then(() => msg.obj.react('🇪'))
-        .then(() => msg.obj.react('🇳'))
-        .then(() => msg.obj.react('🇹'))
-        .catch(() => console.error('One of the emojis failed to react.'));
+        .catch(() => console.error("Couldn't react with checkmark."));
 };
