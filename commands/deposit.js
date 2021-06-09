@@ -6,19 +6,23 @@ module.exports = async (msg) => {
         notifyCreation()
             .then(() => process.core.coin.createAddress(msg.sender))
             .then((newAddress) => process.core.users.setAddress(msg.sender, newAddress))
-            .then((newAddress) => sendAddress(newAddress))
+            .then((newAddress) => sendAddressOrNotifyError(newAddress))
             .catch(() => console.error("Error generating deposit address"));
     } else {
         address = await process.core.users.getAddress(msg.sender);
-        msg.obj.reply("Your reusable address is " + address + ". Keep in mind this ONLY ACCEPTS MATIC FRY (https://explorer-mainnet.maticvigil.com/address/0x48D3a72230e65380f63a05eE41A7BE31773c44b4).");
+        replyWithAddress(address)
     };
 
-    async function sendAddress(newAddress) {
+    async function sendAddressOrNotifyError(newAddress) {
         if (newAddress != "invalid") {
-            msg.obj.reply("Your reusable address is " + newAddress + ". Keep in mind this ONLY ACCEPTS MATIC FRY (https://explorer-mainnet.maticvigil.com/address/0x48D3a72230e65380f63a05eE41A7BE31773c44b4).");
+            replyWithAddress(newAddress)
         } else {
             msg.obj.reply("There was an error generating your address.");
         }
+    }
+
+    async function replyWithAddress(address) {
+        msg.obj.reply("Your reusable address is " + address + ".\n\nKeep in mind this ONLY ACCEPTS MATIC FRY (https://explorer-mainnet.maticvigil.com/address/0x48D3a72230e65380f63a05eE41A7BE31773c44b4).");
     }
 
     async function notifyCreation() {
