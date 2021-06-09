@@ -68,5 +68,5 @@ module.exports = async (msg) => {
         return;
     }
 
-    msg.obj.reply("Success! Your TX hash is " + hash + ".");
+    msg.obj.reply("Success! Your withdraw TX can be tracked at https://explorer-mainnet.maticvigil.com/tx/ " + hash + ".");
 };

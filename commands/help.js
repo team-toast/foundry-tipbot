@@ -18,11 +18,13 @@ Prints your balance.
 -- *!tip <@PERSON> <AMOUNT>*
 Tips the person that amount of ${symbol}.
 
--- *!withdraw <AMOUNT> <ADDRESS>*
-Withdraws AMOUNT to ADDRESS, charging a ${fee} ${symbol} fee.
+-- *!withdraw <AMOUNT> <MATIC ADDRESS>*
+NOTE: This will withdraw MATIC FRY ONLY (https://explorer-mainnet.maticvigil.com/address/0x48D3a72230e65380f63a05eE41A7BE31773c44b4)
+Withdraws AMOUNT to MATIC ADDRESS, charging a ${fee} ${symbol} fee.
 
 -- *!deposit*
-Prints your personal deposit address.
+NOTE: This will accept MATIC FRY ONLY (https://explorer-mainnet.maticvigil.com/address/0x48D3a72230e65380f63a05eE41A7BE31773c44b4)
+Prints your personal deposit address for Matic FRY.
 
 If you have any questions, feel free to ask <@390247192264310785>.
 

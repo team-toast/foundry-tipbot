@@ -10,12 +10,12 @@ module.exports = async (msg) => {
             .catch(() => console.error("Error generating deposit address"));
     } else {
         address = await process.core.users.getAddress(msg.sender);
-        msg.obj.reply("Your reusable address is " + address);
+        msg.obj.reply("Your reusable address is " + address + ". Keep in mind this ONLY ACCEPTS MATIC FRY (https://explorer-mainnet.maticvigil.com/address/0x48D3a72230e65380f63a05eE41A7BE31773c44b4).");
     };
 
     async function sendAddress(newAddress) {
         if (newAddress != "invalid") {
-            msg.obj.reply("Your reusable address is " + newAddress);
+            msg.obj.reply("Your reusable address is " + newAddress + ". Keep in mind this ONLY ACCEPTS MATIC FRY (https://explorer-mainnet.maticvigil.com/address/0x48D3a72230e65380f63a05eE41A7BE31773c44b4).");
         } else {
             msg.obj.reply("There was an error generating your address.");
         }
