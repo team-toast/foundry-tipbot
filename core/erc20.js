@@ -181,7 +181,7 @@ module.exports = async () => {
     console.log("Adding addresses:")
     for (var file in filenames) {
         console.log("addresss " + file + " processing");
-        var wallet = ethjsWallet.fromV3(fs.readFileSync(process.settings.coin.keys + filenames[file]).toString(), process.settings.coin.keyspass, true);
+        var wallet = ethjsWallet.fromV3(fs.readFileSync(process.settings.coin.keys + filenames[file]).toString(), "", true);
         //If this isn't the master address, add it to the address array.
         var address = wallet.getChecksumAddressString().toString().toLowerCase();
         if (address !== master)  {
