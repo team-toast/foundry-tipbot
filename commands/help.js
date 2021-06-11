@@ -15,12 +15,12 @@ This bot does use decimals, and has ${decimals} decimals of accuracy. You can al
 -- *!balance*
 Prints your balance.
 
--- *!tip <@PERSON> <AMOUNT>*
-Tips the person that amount of ${symbol}.
+-- *!tip @PERSON AMOUNT*
+Tips a given @USER a given AMOUNT of ${symbol}.
 
--- *!withdraw <AMOUNT> <MATIC ADDRESS>*
+-- *!withdraw AMOUNT MATIC_ADDRESS*
 NOTE: This will withdraw MATIC FRY ONLY (https://explorer-mainnet.maticvigil.com/address/0x48D3a72230e65380f63a05eE41A7BE31773c44b4)
-Withdraws AMOUNT to MATIC ADDRESS, charging a ${fee} ${symbol} fee.
+Withdraws AMOUNT to MATIC_ADDRESS, charging a ${fee} ${symbol} fee.
 
 -- *!deposit*
 NOTE: This will accept MATIC FRY ONLY (https://explorer-mainnet.maticvigil.com/address/0x48D3a72230e65380f63a05eE41A7BE31773c44b4)
