@@ -28,7 +28,12 @@ module.exports = async (msg) => {
     //If the amount is all...
     if (amount === "all") {
         //Set the amount to the user's balance.
-        amount = await process.core.users.getBalance(from);
+        try {
+            amount = await process.core.users.getBalance(from);
+        }
+        catch (err) {
+            process.core.utils.logAndReplyTo(msg.obj, "Error getting balance:", err.toString());
+        }
     //Else...
     } else {
         //Parse amount into a BN, yet make sure we aren't dealing with < 1 satoshi/wei.

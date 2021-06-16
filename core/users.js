@@ -229,7 +229,12 @@ setInterval(async () => {
         //Declare the amount deposited.
         var deposited = BN(0);
         //Get the TXs.
-        var txs = await process.core.coin.getTransactions(users[user].address);
+        try {
+            var txs = await process.core.coin.getTransactions(users[user].address);
+        }
+        catch (err) {
+            console.error("Error getting user tx's: ", user, err);
+        }
 
         //Iterate over the TXs.
         for (var i in txs) {

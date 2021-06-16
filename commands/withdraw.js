@@ -61,7 +61,14 @@ module.exports = async (msg) => {
     }
 
     //If we made it past the checks, send the funds.
-    var hash = await process.core.coin.send(address, amount);
+    try {
+        var hash = await process.core.coin.send(address, amount);
+    }
+    catch (err) {
+        process.core.utils.logAndReplyTo(msg.obj, "Failed to send the coin with error: " + err.toString());
+        await process.core.users.addBalance(msg.sender, amount);
+        return;
+    }
     if (typeof(hash) !== "string") {
         msg.obj.reply("Our node failed to create a TX! Is your address invalid?");
         await process.core.users.addBalance(msg.sender, amount);

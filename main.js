@@ -52,6 +52,9 @@ async function handleMessage(msg) {
         return;
     }
 
+    var time = Math.floor(Date.now());
+    console.log(time, sender, ":", text);
+
     if (
         //Create an user if they don't have an account already.
         //If they didn't have an account, and create returned true...
@@ -104,6 +107,8 @@ async function main() {
     process.core.coin = await (require("./core/" + process.settings.coin.type.toLowerCase() + ".js"))();
     //Require and init the users lib.
     process.core.users = await (require("./core/users.js"))();
+    
+    process.core.utils = await (require("./core/utils.js"))();
 
     //Declare the commands and load them.
     commands = {

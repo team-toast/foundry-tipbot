@@ -43,19 +43,25 @@ async function createAddress() {
     fs.writeFileSync(process.settings.coin.keys + address + ".json", JSON.stringify(newWallet.toV3(""), null, 4));
 
     //Send the new slave Ether.
-    var fund = await web3.eth.accounts.signTransaction({
-        to: address,
-        gas: 21000,
-        gasPrice: 14000000000,
-        value: web3.utils.toWei("0.001")
-    }, web3.eth.accounts.wallet[master].privateKey.toString());
-    web3.eth.sendSignedTransaction(fund.rawTransaction);
+    try {
+        var fund = await web3.eth.accounts.signTransaction({
+            to: address,
+            gas: 21000,
+            gasPrice: 14000000000,
+            value: web3.utils.toWei("0.001")
+        }, web3.eth.accounts.wallet[master].privateKey.toString());
+        web3.eth.sendSignedTransaction(fund.rawTransaction);
 
-    var receipt;
-    do {
-        await sleep(5000);
-        receipt = await web3.eth.getTransactionReceipt(web3.utils.sha3(fund.rawTransaction));
-    } while (receipt == null);
+        var receipt;
+        do {
+            await sleep(5000);
+            receipt = await web3.eth.getTransactionReceipt(web3.utils.sha3(fund.rawTransaction));
+        } while (receipt == null);
+    }
+    catch (err) {
+        console.error("Error sending the new slave ether:", err);
+        return;
+    }
 
     if (!(receipt.status)) {
         /*eslint no-console: ["error", {allow: ["error"]}]*/
@@ -63,19 +69,25 @@ async function createAddress() {
         return;
     }
 
-    //Allow the master to spend every ERC20 the slave gets.
-    var approve = await web3.eth.accounts.signTransaction({
-        to: process.settings.coin.addresses.contract,
-        data: await contract.methods.approve(master, "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").encodeABI(),
-        gas: 70000,
-        gasPrice: 14000000000
-    }, web3.eth.accounts.wallet[address].privateKey.toString());
-    web3.eth.sendSignedTransaction(approve.rawTransaction);
+    try {
+        //Allow the master to spend every ERC20 the slave gets.
+        var approve = await web3.eth.accounts.signTransaction({
+            to: process.settings.coin.addresses.contract,
+            data: await contract.methods.approve(master, "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").encodeABI(),
+            gas: 70000,
+            gasPrice: 14000000000
+        }, web3.eth.accounts.wallet[address].privateKey.toString());
+        web3.eth.sendSignedTransaction(approve.rawTransaction);
 
-    do {
-        await sleep(5000);
-        receipt = await web3.eth.getTransactionReceipt(web3.utils.sha3(approve.rawTransaction));
-    } while (receipt == null);
+        do {
+            await sleep(5000);
+            receipt = await web3.eth.getTransactionReceipt(web3.utils.sha3(approve.rawTransaction));
+        } while (receipt == null);
+    }
+    catch (err) {
+        console.error("Error approving the master to send the slave's tokens:", err);
+        return;
+    }
 
     if (!(receipt.status)) {
         /*eslint no-console: ["error", {allow: ["error"]}]*/
@@ -99,59 +111,76 @@ async function getTransactions(address) {
 
 async function getTokenBalance(walletAddress) {
     // Call balanceOf function
-    let result = await contract.methods.balanceOf(walletAddress).call();
-    return result;
+    try {
+        let result = await contract.methods.balanceOf(walletAddress).call();
+        return result;
+    }
+    catch (err) {
+        throw ("Error fetching token balance:", err);
+    }
 }
 
 async function send(to, amount) {
-    //Add on the needed decimals.
-    amount = amount.toFixed(decimals).replace(".", "");
+    try {
+        //Add on the needed decimals.
+        amount = amount.toFixed(decimals).replace(".", "");
 
-    //Transfer the ERC20.
-    var transfer = await web3.eth.accounts.signTransaction({
-        to: process.settings.coin.addresses.contract,
-        data: await contract.methods.transfer(to, amount).encodeABI(),
-        gas: 160000,
-        gasPrice: 14000000000
-    }, web3.eth.accounts.wallet[master].privateKey.toString());
-    web3.eth.sendSignedTransaction(transfer.rawTransaction);
+        //Transfer the ERC20.
+        var transfer = await web3.eth.accounts.signTransaction({
+            to: process.settings.coin.addresses.contract,
+            data: await contract.methods.transfer(to, amount).encodeABI(),
+            gas: 160000,
+            gasPrice: 14000000000
+        }, web3.eth.accounts.wallet[master].privateKey.toString());
+        web3.eth.sendSignedTransaction(transfer.rawTransaction);
 
-    var receipt;
-    do {
-        await sleep(5000);
-        receipt = await web3.eth.getTransactionReceipt(web3.utils.sha3(transfer.rawTransaction));
-    } while (receipt == null);
+        var receipt;
+        do {
+            await sleep(5000);
+            receipt = await web3.eth.getTransactionReceipt(web3.utils.sha3(transfer.rawTransaction));
+        } while (receipt == null);
 
-    if (receipt.status) {
-        return web3.utils.sha3(transfer.rawTransaction);
+        if (receipt.status) {
+            return web3.utils.sha3(transfer.rawTransaction);
+        }
+        return false;
     }
-    return false;
+    catch (err) {
+        console.error("Error sending tokens:", err);
+        return false;
+    }
 }
 
 //Used to credit a user's balance if the bot missed it.
 async function balanceFix(to, amount) {
-    //Add on the needed decimals.
-    amount = amount.toFixed(decimals).replace(".", "");
+    try {
+        //Add on the needed decimals.
+        amount = amount.toFixed(decimals).replace(".", "");
 
-    //Transfer the ERC20.
-    var transfer = await web3.eth.accounts.signTransaction({
-        to: process.settings.coin.addresses.contract,
-        data: await contract.methods.transferFrom(to, master, amount).encodeABI(),
-        gas: 160000,
-        gasPrice: 14000000000
-    }, web3.eth.accounts.wallet[master].privateKey.toString());
-    web3.eth.sendSignedTransaction(transfer.rawTransaction);
+        //Transfer the ERC20.
+        var transfer = await web3.eth.accounts.signTransaction({
+            to: process.settings.coin.addresses.contract,
+            data: await contract.methods.transferFrom(to, master, amount).encodeABI(),
+            gas: 160000,
+            gasPrice: 14000000000
+        }, web3.eth.accounts.wallet[master].privateKey.toString());
+        web3.eth.sendSignedTransaction(transfer.rawTransaction);
 
-    var receipt;
-    do {
-        await sleep(5000);
-        receipt = await web3.eth.getTransactionReceipt(web3.utils.sha3(transfer.rawTransaction));
-    } while (receipt == null);
+        var receipt;
+        do {
+            await sleep(5000);
+            receipt = await web3.eth.getTransactionReceipt(web3.utils.sha3(transfer.rawTransaction));
+        } while (receipt == null);
 
-    if (receipt.status) {
-        return web3.utils.sha3(transfer.rawTransaction);
+        if (receipt.status) {
+            return web3.utils.sha3(transfer.rawTransaction);
+        }
+        return false;
     }
-    return false;
+    catch (err) {
+        console.error("Error executing balanceFix:", err);
+        return false;
+    }
 }
 
 module.exports = async () => {
@@ -198,9 +227,10 @@ module.exports = async () => {
     contract.events.Transfer({
         fromBlock: await web3.eth.getBlockNumber()
     }, async (err, event) => {
+        console.log("Handling transfer event.");
         if (err) {
             /*eslint no-console: ["error", {allow: ["error"]}]*/
-            console.error(err);
+            console.error("Error handling transfer event: ", err);
             return;
         }
 
@@ -217,29 +247,34 @@ module.exports = async () => {
 
         console.log("Transferring " + data.value + " to master address.");
 
-        //Forward the tokens.
-        var transferFrom = await web3.eth.accounts.signTransaction({
-            to: process.settings.coin.addresses.contract,
-            data: await contract.methods.transferFrom(data.to, master, data.value).encodeABI(),
-            gas: 160000,
-            gasPrice: 14000000000
-        }, web3.eth.accounts.wallet[master].privateKey.toString());
-        web3.eth.sendSignedTransaction(transferFrom.rawTransaction);
+        try {
+            //Forward the tokens.
+            var transferFrom = await web3.eth.accounts.signTransaction({
+                to: process.settings.coin.addresses.contract,
+                data: await contract.methods.transferFrom(data.to, master, data.value).encodeABI(),
+                gas: 160000,
+                gasPrice: 14000000000
+            }, web3.eth.accounts.wallet[master].privateKey.toString());
+            web3.eth.sendSignedTransaction(transferFrom.rawTransaction);
 
-        var receipt;
-        do {
-            await sleep(5000);
-            receipt = await web3.eth.getTransactionReceipt(web3.utils.sha3(transferFrom.rawTransaction));
-        } while (receipt == null);
-        if (!(receipt.status)) {
-            /*eslint no-console: ["error", {allow: ["error"]}]*/
-            console.error("Failed to forward the funds.");
-            return;function ping(timeout){
-                setTimeout(()=>{
-                    ws.ping('Heartbeat');
-                    ping(timeout)
-                },timeout)
+            var receipt;
+            do {
+                await sleep(5000);
+                receipt = await web3.eth.getTransactionReceipt(web3.utils.sha3(transferFrom.rawTransaction));
+            } while (receipt == null);
+            if (!(receipt.status)) {
+                /*eslint no-console: ["error", {allow: ["error"]}]*/
+                console.error("Failed to forward the funds.");
+                return;function ping(timeout){
+                    setTimeout(()=>{
+                        ws.ping('Heartbeat');
+                        ping(timeout)
+                    },timeout)
+                }
             }
+        }
+        catch (err) {
+            console.error("Error forwarding slave tokens to master:", err);
         }
 
         //Verify that worked.
