@@ -9,7 +9,7 @@ BN.config({
 //Definition of the table: `name VARCHAR(64), address VARCHAR(64), balance VARCHAR(64), notify tinyint(1)`.
 
 //MySQL connection and table vars.
-var connection, table;
+var sqlConnectionPool, table;
 
 //RAM cache of users.
 var users;
@@ -42,7 +42,7 @@ async function create(user) {
     }
 
     //Create the new user, with a blank address, balance of 0, and the notify flag on.
-    await connection.query("INSERT INTO " + table + " VALUES(?, ?, ?, ?)", [user, "", "0", 1]);
+    await sqlConnectionPool.query("INSERT INTO " + table + " VALUES(?, ?, ?, ?)", [user, "", "0", 1]);
     //Create the new user in the RAM cache, with a status of no address, balance of 0, and the notify flag on.
     users[user] = {
         address: false,
@@ -62,7 +62,7 @@ async function setAddress(user, address) {
     }
 
     //Update the table with the address.
-    await connection.query("UPDATE " + table + " SET address = ? WHERE name = ?", [address, user]);
+    await sqlConnectionPool.query("UPDATE " + table + " SET address = ? WHERE name = ?", [address, user]);
     //Update the RAM cache.
     users[user].address = address;
     return address;
@@ -80,7 +80,7 @@ async function addBalance(user, amount) {
     //Convert the balance to the coin's smallest unit.
     balance = balance.toFixed(process.settings.coin.decimals);
     //Update the table with the new balance, as a string.
-    await connection.query("UPDATE " + table + " SET balance = ? WHERE name = ?", [balance, user]);
+    await sqlConnectionPool.query("UPDATE " + table + " SET balance = ? WHERE name = ?", [balance, user]);
     //Update the RAM cache with a BN.
     users[user].balance = BN(balance);
 
@@ -90,7 +90,7 @@ async function addBalance(user, amount) {
 //Return the balance for all users
 async function getAllBalance() {
     table = process.settings.mysql.tips;
-    rows = await connection.query("SELECT sum(balance) as balance FROM " + table);
+    rows = await sqlConnectionPool.query("SELECT sum(balance) as balance FROM " + table);
     
     return BN(rows[0].balance);
 }
@@ -112,7 +112,7 @@ async function subtractBalance(user, amount) {
     //Convert the balance to the coin's smallest unit.
     balance = balance.toFixed(process.settings.coin.decimals);
     //Update the table with the new balance, as a string.
-    await connection.query("UPDATE " + table + " SET balance = ? WHERE name = ?", [balance, user]);
+    await sqlConnectionPool.query("UPDATE " + table + " SET balance = ? WHERE name = ?", [balance, user]);
     //Update the RAM cache with a BN.
     users[user].balance = BN(balance);
 
@@ -122,7 +122,7 @@ async function subtractBalance(user, amount) {
 //Updates the notify flag.
 async function setNotified(user) {
     //Update the table with a turned off notify flag.
-    await connection.query("UPDATE " + table + " SET notify = ? WHERE name = ?", [0, user]);
+    await sqlConnectionPool.query("UPDATE " + table + " SET notify = ? WHERE name = ?", [0, user]);
     //Update the RAM cache.
     users[user].notify = false;
 }
@@ -150,7 +150,8 @@ async function getNotify(user) {
 
 module.exports = async () => {
     //Connects to MySQL.
-    connection = await mysql.createConnection({
+    sqlConnectionPool = await mysql.createPool({
+        connectionLimit: 10,
         host: "localhost",
         database: process.settings.mysql.db,
         user: process.settings.mysql.user,
@@ -166,7 +167,7 @@ module.exports = async () => {
     //Init the handled array.
     handled = [];
     //Gets every row in the tips table.
-    var rows = await connection.query("SELECT * FROM " + table);
+    var rows = await sqlConnectionPool.query("SELECT * FROM " + table);
     //Iterate over each row, creating an user object for each.
     var i;
     for (i in rows) {
@@ -190,7 +191,7 @@ module.exports = async () => {
     }
 
     //Set admin list.
-    rows = await connection.query("SELECT * FROM " + adminTbl);
+    rows = await sqlConnectionPool.query("SELECT * FROM " + adminTbl);
     for (i in rows) {
         admins[rows[i].admin_id] = {active: rows[i].active};
     }
